@@ -1,52 +1,9 @@
 from enum import IntEnum
 from typing import Tuple, Iterable
 
-import numpy as np
-
-
-class Symbol(IntEnum):
-    E = 0
-    O = 1
-    X = 2
-
-    def __repr__(self):
-        return self.name
-
-class GameResult(IntEnum):
-    NA = 0
-    O = 1
-    X = 2
-    TIE = 3
-
-    def __repr__(self):
-        return self.name
-
-
-class PlayerBase:
-    def __init__(self):
-        self._symbol = None
-
-    @property
-    def symbol(self):
-        return self._symbol
-
-    @symbol.setter
-    def symbol(self, symbol: Symbol):
-        assert symbol.name in ['X', 'O']
-        self._symbol = symbol
-
-    def play_turn(self, game_state: Iterable[int]) -> Tuple[int, int]:
-        raise NotImplementedError
-
-
-class PlayerHuman(PlayerBase):
-    def play_turn(self, game_state: Iterable[int]) -> Tuple[int, int]:
-        in_str = f'its {self.symbol.name} turn, play: <x y>'
-        print(np.array(game_state).reshape((3,3,3)))
-        xy = tuple(int(x) for x in input(in_str).split()[:2])
-        if len(xy)<2:
-            raise ValueError('Bad input. expected: <x> <y>')
-        return xy
+from ttt3d import np
+from ttt3d.enums import Symbol, GameResult
+from ttt3d.player_base import PlayerBase
 
 
 class TikTacToe3d:
@@ -122,9 +79,19 @@ class TikTacToe3d:
         self.turn = Symbol.O if self.turn == Symbol.X else Symbol.X
         return result
 
+    def publish_results(self):
+        if self.result == GameResult.TIE:
+            print("TIE")
+        if self.result == GameResult.NA:
+            print("NO RESULT")
+        else:
+            print(f"{self.result.name} IS THE WINNER")
+
     def start_game(self, player_x, player_o) -> GameResult:
         assert (isinstance(player_x, PlayerBase))
         assert (isinstance(player_o, PlayerBase))
+        print("GAME START")
+        self.plot()
         player_o.symbol = Symbol.O
         player_x.symbol = Symbol.X
         while self.result == GameResult.NA:
@@ -132,14 +99,19 @@ class TikTacToe3d:
             xy = player.play_turn(self.get_board_tuple())
             try:
                 self.place(xy)
+                self.plot()
             except ValueError:
                 # print(f'invalid location for player {self.turn.name}:{xy}')
                 continue
-        return self.result
+            except KeyboardInterrupt:
+                self.publish_results()
+        print("GAME OVER")
+        self.publish_results()
+        return self.result.value
 
 
-if __name__ == '__main__':
-    player_x = PlayerHuman()
-    player_o = PlayerHuman()
-    game = TikTacToe3d()
-    game.start_game(player_x=player_x, player_o=player_o)
+        #
+        # if self.result not GameResult.O:
+        #     print("\n\n\nPlayer 'O' wins!\n\n\n _____________ ")
+        #     self.plot()
+        # return self.result
