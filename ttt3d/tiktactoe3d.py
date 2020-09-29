@@ -51,7 +51,8 @@ class TikTacToe3d:
             return GameResult.NA
 
     def get_board_tuple(self) -> Iterable[int]:
-        return tuple(self.board.flatten().astype('uint8'))
+        board_tuple = tuple(self.board.flatten().astype('uint8'))
+        return board_tuple
 
     def place(self, xy: Tuple[int, int]) -> GameResult:
         x, y = xy
@@ -65,17 +66,10 @@ class TikTacToe3d:
                 placed = True
                 break
         if not placed:
-            # self.plot()
             raise ValueError(f'could not place in ({x},{y})')
         result = self.check_win(x=x, y=y, z=z)
         self.result = result
 
-        # if result == GameResult.TIE:
-            # self.plot()
-        # elif result == GameResult(self.turn):
-        #     pass
-            # print('{self.turn} Wins!')
-            # self.plot()
         self.turn = Symbol.O if self.turn == Symbol.X else Symbol.X
         return result
 
@@ -90,8 +84,7 @@ class TikTacToe3d:
     def start_game(self, player_x, player_o) -> GameResult:
         assert (isinstance(player_x, PlayerBase))
         assert (isinstance(player_o, PlayerBase))
-        print("GAME START")
-        self.plot()
+
         player_o.symbol = Symbol.O
         player_x.symbol = Symbol.X
         while self.result == GameResult.NA:
@@ -99,19 +92,9 @@ class TikTacToe3d:
             xy = player.play_turn(self.get_board_tuple())
             try:
                 self.place(xy)
-                self.plot()
             except ValueError:
-                # print(f'invalid location for player {self.turn.name}:{xy}')
                 continue
             except KeyboardInterrupt:
                 self.publish_results()
-        print("GAME OVER")
         self.publish_results()
         return self.result.value
-
-
-        #
-        # if self.result not GameResult.O:
-        #     print("\n\n\nPlayer 'O' wins!\n\n\n _____________ ")
-        #     self.plot()
-        # return self.result
